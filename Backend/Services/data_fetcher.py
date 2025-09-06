@@ -1,8 +1,7 @@
-import yfinance as yf # type: ignore
-import pandas as pd # type: ignore
-import matplotlib.pyplot as plt # type: ignore
-from fredapi import Fred # type: ignore
-import numpy as np # type: ignore
+import yfinance as yf  # type: ignore
+import pandas as pd  # type: ignore
+import matplotlib.pyplot as plt  # type: ignore
+import numpy as np  # type: ignore
 
 # -------------------
 # STEP 1: Fetch Data
@@ -24,19 +23,25 @@ gspc["Pct_Change"] = gspc["Close"].pct_change() * 100
 gspc["MA_50"] = gspc["Close"].rolling(window=50).mean()
 gspc["MA_200"] = gspc["Close"].rolling(window=200).mean()
 
-# Average Volume (50-day rolling average)
-gspc["Avg_Volume"] = gspc["Volume"].rolling(window=50).mean()
+# Average Volume (50-day rolling average) - only if Volume exists
+if "Volume" in gspc.columns:
+    gspc["Avg_Volume"] = gspc["Volume"].rolling(window=50).mean()
+else:
+    gspc["Avg_Volume"] = np.nan
 
-# RSI (14-day)
+# RSI (14-day, using exponential moving averages)
+# RSI (14-day, using exponential moving averages)
 delta = gspc["Close"].diff()
 gain = np.where(delta > 0, delta, 0)
 loss = np.where(delta < 0, -delta, 0)
 
-roll_up = pd.Series(gain).rolling(14).mean()
-roll_down = pd.Series(loss).rolling(14).mean()
+# flatten to avoid shape (n,1) error
+roll_up = pd.Series(gain.flatten(), index=gspc.index).ewm(span=14).mean()
+roll_down = pd.Series(loss.flatten(), index=gspc.index).ewm(span=14).mean()
+
 RS = roll_up / roll_down
-RSI = 100 - (100 / (1 + RS))
-gspc["RSI"] = RSI.values
+gspc["RSI"] = 100 - (100 / (1 + RS))
+
 
 # -------------------
 # STEP 3: Clean + Format
