@@ -1,11 +1,29 @@
-import yfinance as yf
+from fredapi import Fred
 import pandas as pd
-import matplotlib as plt
-import fredapi as fred
-# we will work tomorrow in the cafe and at home. yes. Check my code now in datafetcher.py pls. 
-# yes just wait. 
-#Vaibhaav i finished the code for data_fetcher.py, so just check it now or whenever today
-#I commited the changes. Jus tell me if you are reading.
-#I am commiting data_fetcher.py right now, but how do i commit again? I already did it.
-#Oh ok, good night see you tomorrow at school. 
-#Yes see you bye. 
+import matplotlib.pyplot as plt
+
+key = "2b7914ceb25e5d40f9c9a42007a3b78a"
+start_date = "1990-01-01"
+
+fred = Fred(api_key=key)
+
+# Fetch the official GDP series only
+data = fred.get_series('GDP', start_date)
+
+# Convert to DataFrame
+df = pd.DataFrame(data, columns=['GDP'])
+df = df.reset_index()
+df.columns = ['Date', 'GDP']
+
+# Convert GDP to billions
+df['GDP'] = df['GDP'] / 1000
+
+# Optional: plot
+plt.figure(figsize=(10,6))
+plt.plot(df['Date'], df['GDP'], label='GDP (in billions $)')
+plt.xlabel('Date')
+plt.ylabel('GDP (Billions USD)')
+plt.title('US GDP Over Time')
+plt.legend()
+plt.grid(True)
+plt.show()
